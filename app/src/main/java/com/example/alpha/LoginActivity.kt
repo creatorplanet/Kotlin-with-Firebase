@@ -14,6 +14,8 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import android.app.Activity
 import androidx.activity.result.contract.ActivityResultContracts
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.FirebaseFirestore
 
 class LoginActivity : AppCompatActivity() {
     //create a button variable
@@ -25,9 +27,7 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
-
-        //themes: hide menuBar
-        supportActionBar?.hide()
+        supportActionBar?.hide() //themes: hide menuBar
 
         auth = Firebase.auth
 
@@ -66,8 +66,6 @@ class LoginActivity : AppCompatActivity() {
                 }
             }
         }
-
-    //
     private fun firebaseAuthWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential)
@@ -75,8 +73,10 @@ class LoginActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     // Sign in success, update UI with the signed-in user's information
                     val user = auth.currentUser
-                    //send user to main
+                    // Send user to main
                     gotomain()
+
+                    saveUserDataToDatabase(task.result!!.user)
                 } else {
                     // If sign in fails, display a message to the user.
                     Toast.makeText(this, "failed to sign in", Toast.LENGTH_SHORT).show()
@@ -98,12 +98,19 @@ class LoginActivity : AppCompatActivity() {
             gotomain()
         }
     }
+
+    // save user data to database
+    fun saveUserDataToDatabase(user : FirebaseUser?){
+        val email = user?.email
+        val uid = user?.uid
+
+        var userDTO = UserDTO()
+        userDTO.email = email
+        userDTO.emoji =  "\uD83D\uDC3C \uD83C\uDF3F \uD83D\uDDA4 "
+
+        FirebaseFirestore.getInstance().collection("users").document(uid!!).set(userDTO)
+        //
+        finish()
+        startActivity(Intent(this, MainActivity::class.java))
+    }
 }
-
-
-//import androidx.activity.result.ActivityResultLauncher
-//import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
-//import androidx.activity.result.ActivityResultCallback
-//import android.util.Log
-// * [sign_btn] btnSignIn
-// * [RC_SIGN_IN] RC_GOOGLE_SIGN_IN
